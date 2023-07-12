@@ -2,13 +2,10 @@ package br.com.oneguy.testr2dbc.controller
 
 import br.com.oneguy.testr2dbc.mapper.transform
 import br.com.oneguy.testr2dbc.model.dto.BookAuthorDTO
-import br.com.oneguy.testr2dbc.model.dto.BookDTO
-import br.com.oneguy.testr2dbc.model.persist.Book
 import br.com.oneguy.testr2dbc.model.persist.BookAuthor
 import br.com.oneguy.testr2dbc.service.BookAuthorService
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
 @RestController
@@ -39,10 +36,10 @@ class BookAuthorController(
 
     @PostMapping("/book_author")
     @PutMapping("/book_author")
-    fun update(@RequestBody value: BookAuthorDTO): Flux<BookAuthorDTO> = bookAuthorService.save(value.transform()).map(BookAuthor::transform).flux()
+    fun update(@RequestBody value: BookAuthorDTO): Flux<BookAuthorDTO> =
+        bookAuthorService.save(value.transform()).map(BookAuthor::transform).flux()
 
     @DeleteMapping("/book_author/{id}")
-    fun delete(@PathVariable("id", required = true) id: Long): Mono<BookAuthorDTO> =
-        bookAuthorService.remove(id).map(BookAuthor::transform)
+    fun delete(@PathVariable("id", required = true) id: Long) = bookAuthorService.remove(id)
 
 }

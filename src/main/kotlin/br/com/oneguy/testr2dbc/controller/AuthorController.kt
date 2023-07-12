@@ -1,35 +1,26 @@
 package br.com.oneguy.testr2dbc.controller
 
-import br.com.oneguy.testr2dbc.mapper.transform
 import br.com.oneguy.testr2dbc.model.dto.AuthorDTO
-import br.com.oneguy.testr2dbc.model.persist.Author
-import br.com.oneguy.testr2dbc.service.AuthorService
+import br.com.oneguy.testr2dbc.service.BookAuthorFacade
 import org.springframework.web.bind.annotation.*
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 
 @RestController
 class AuthorController(
-    private val authorService: AuthorService
+    private val service: BookAuthorFacade
 ) {
 
     @GetMapping("/authors")
-    fun find(@RequestParam(value = "id", required = false) id: Long? = null): Flux<AuthorDTO> {
-        return if (id != null) {
-            authorService.findById(id).flux()
-        } else {
-            authorService.findAll()
-        }.map(Author::transform)
-    }
+    fun find(
+        @RequestParam(value = "id", required = false) authorId: Long? = null,
+        @RequestParam(value = "name", required = false) authorName: String? = null
+    ) = service.findAuthorDTO(authorId = authorId, authorName = authorName)
 
     @PostMapping("/authors")
     @PutMapping("/authors")
-    fun update(@RequestBody value: AuthorDTO): Mono<AuthorDTO> =
-        authorService.save(value.transform()).map(Author::transform)
+    fun update(@RequestBody value: AuthorDTO) = service.save(value)
 
     @DeleteMapping("/authors/{id}")
-    fun delete(@PathVariable("id", required = true) id: Long): Mono<AuthorDTO> =
-        authorService.remove(id).map(Author::transform)
+    fun delete(@PathVariable("id", required = true) id: Long) = service.removeAuthor(id)
 
 
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-docker pull dockerregistry:5000/person-microservice-img:latest
+docker pull test-r2dbc-img:latest
 docker-compose down
 docker-compose up
 docker-compose down

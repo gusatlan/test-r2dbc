@@ -66,7 +66,7 @@ class BookAuthorService(
     }
 
     @Transactional
-    fun remove(id: Long): Mono<BookAuthor> {
+    fun remove(id: Long): Mono<Void> {
         return findById(id)
             .flatMap {
                 bookAuthorRepository.delete(it).subscribe()
@@ -77,6 +77,6 @@ class BookAuthorService(
             }
             .doOnError {
                 logger.debug("BookAuthorService:remove $id => $it")
-            }
+            }.then()
     }
 }

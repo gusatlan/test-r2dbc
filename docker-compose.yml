@@ -1,61 +1,49 @@
 version: "3"
 services:
   db:
-    image: cassandra
+    image: postgres
     ports:
-      - "9042:9042"
-      - "7000:7000"
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=books
     volumes:
-      - "cassandra-data:/var/lib/cassandra"
+      - "pgsql_data:/var/lib/postgresql/data"
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/db.sql
     networks:
-      - person-microservice-network
-  zookeeper:
-    image: 'bitnami/zookeeper:3.6.1'
-    container_name: zookeeper
-    networks:
-      - person-microservice-network
+      - test-r2dbc-network
+  pgadmin:
+    image: dpage/pgadmin4
     ports:
-      - "2181:2181"
+      - "8083:80"
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-  kafka:
-    image: 'bitnami/kafka:2.5.0'
-    container_name: kafka
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - PGADMIN_DEFAULT_EMAIL=user@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=useruser
     networks:
-      - person-microservice-network
-    ports:
-      - "9092:9092"
-    environment:
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - test-r2dbc-network
     depends_on:
-      - zookeeper
+      - db
   app:
-    image: dockerregistry:5000/person-microservice-img:latest
+    image: test-r2dbc-img:latest
     ports:
       - "8080:8080"
     environment:
-      CASSANDRA_SERVER: db
-      CASSANDRA_DATACENTER: datacenter1
-      #CASSANDRA_USER: root
-      #CASSANDRA_PASSWORD: password
-      #CASSANDRA_CONNECT_TIMEOUT: 50s
-      #CASSANDRA_REQUEST_TIMEOUT: 10s
-
-      KEYSPACE_NAME: person
-
-      KAFKA_BROKERS: kafka:9092
+      DB_HOST: db
+      DB_NAME: books
+      DB_USERNAME: root
+      DB_PASSWORD: root
     networks:
-      - person-microservice-network
+      - test-r2dbc-network
     depends_on:
       - db
-      - zookeeper
-      - kafka
+      - pgadmin
     restart: on-failure:100
 
 volumes:
-  cassandra-data:
+  pgsql_data:
 networks:
-  person-microservice-network:
+  test-r2dbc-network:
     driver: bridge

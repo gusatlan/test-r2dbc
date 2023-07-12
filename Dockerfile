@@ -3,5 +3,5 @@ RUN apt update;apt -y install openjdk-17-jre && apt -y upgrade;apt -y autoclean;
 
 EXPOSE 8080
 WORKDIR /tmp
-ADD /build/libs/person-microservice-*.jar /tmp/app.jar
+ADD /build/libs/test-r2dbc-*.jar /tmp/app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

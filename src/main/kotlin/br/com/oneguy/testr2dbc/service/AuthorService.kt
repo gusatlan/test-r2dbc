@@ -11,8 +11,6 @@ import reactor.core.publisher.Mono
 @Service
 class AuthorService(
     private val authorRepository: AuthorRepository,
-    private val bookAuthorService: BookAuthorService,
-    private val bookService: BookService
 ) {
 
     companion object {
@@ -21,13 +19,11 @@ class AuthorService(
 
     fun findAll(): Flux<Author> = authorRepository
         .findAll()
-        .flatMap(this::apply)
         .doOnNext { logger.debug("AuthorRepository:findAll => $it") }
 
     fun findById(id: Long): Mono<Author> {
         return authorRepository
             .findById(id)
-            .flatMap(this::apply)
             .doOnNext { logger.debug("AuthorService:findById $id => $it") }
             .doOnError { logger.error("AuthorService:findById $id => $it") }
     }
@@ -35,22 +31,9 @@ class AuthorService(
     fun findByName(name: String): Flux<Author> {
         return authorRepository
             .findByName(name.trim().uppercase())
-            .flatMap(this::apply)
             .doOnNext { logger.debug("AuthorService:findByName $name => $it") }
             .doOnError { logger.error("AuthorService:findByName $name => $it") }
     }
-
-    fun apply(value: Author): Mono<Author> {
-        return bookAuthorService
-            .findByAuthor(value.id!!)
-            .flatMap { bookService.findById(it.bookId) }
-            .collectList()
-            .map {
-                value.books = it
-                value
-            }
-    }
-
 
     @Transactional
     fun save(value: Author): Mono<Author> {
@@ -70,7 +53,7 @@ class AuthorService(
     }
 
     @Transactional
-    fun remove(id: Long): Mono<Author> {
+    fun remove(id: Long): Mono<Void> {
         return findById(id)
             .flatMap {
                 authorRepository.delete(it).subscribe()
@@ -82,5 +65,6 @@ class AuthorService(
             .doOnError {
                 logger.debug("AuthorService:remove $id => $it")
             }
+            .then()
     }
 }
