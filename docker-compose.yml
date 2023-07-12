@@ -1,0 +1,61 @@
+version: "3"
+services:
+  db:
+    image: cassandra
+    ports:
+      - "9042:9042"
+      - "7000:7000"
+    volumes:
+      - "cassandra-data:/var/lib/cassandra"
+    networks:
+      - person-microservice-network
+  zookeeper:
+    image: 'bitnami/zookeeper:3.6.1'
+    container_name: zookeeper
+    networks:
+      - person-microservice-network
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: 'bitnami/kafka:2.5.0'
+    container_name: kafka
+    networks:
+      - person-microservice-network
+    ports:
+      - "9092:9092"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    depends_on:
+      - zookeeper
+  app:
+    image: dockerregistry:5000/person-microservice-img:latest
+    ports:
+      - "8080:8080"
+    environment:
+      CASSANDRA_SERVER: db
+      CASSANDRA_DATACENTER: datacenter1
+      #CASSANDRA_USER: root
+      #CASSANDRA_PASSWORD: password
+      #CASSANDRA_CONNECT_TIMEOUT: 50s
+      #CASSANDRA_REQUEST_TIMEOUT: 10s
+
+      KEYSPACE_NAME: person
+
+      KAFKA_BROKERS: kafka:9092
+    networks:
+      - person-microservice-network
+    depends_on:
+      - db
+      - zookeeper
+      - kafka
+    restart: on-failure:100
+
+volumes:
+  cassandra-data:
+networks:
+  person-microservice-network:
+    driver: bridge
