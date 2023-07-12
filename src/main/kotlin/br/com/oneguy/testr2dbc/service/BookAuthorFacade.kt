@@ -131,20 +131,32 @@ class BookAuthorFacade(
 
     @Transactional
     fun stress(quantity: Long = 1000L): Mono<Void> {
-        return Flux.fromIterable(generateBook().take(quantity.toInt()).asIterable())
-            .flatMap(this::save)
-            .zipWith(generateAuthor().take(quantity.toInt()).asIterable().toFlux().flatMap(this::save))
+        Flux.fromIterable(
+            generateBook()
+                .asIterable()
+        )
+            .take(quantity)
+            .concatMap(this::save)
+            .zipWith(
+                generateAuthor()
+                    .asIterable()
+                    .toFlux()
+                    .take(quantity)
+                    .concatMap(this::save)
+            )
             .map { tuple ->
                 BookAuthor(
                     bookId = tuple.t1.id!!,
                     authorId = tuple.t2.id!!
                 )
             }
-            .flatMap(bookAuthorService::save)
+            .concatMap(bookAuthorService::save)
             .doOnNext {
                 logger.info("BookAuthor: $it saved")
             }
-            .then()
+            .subscribe()
+
+        return Mono.empty()
     }
 
     private fun generateBook() = sequence {

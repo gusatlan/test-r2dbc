@@ -11,6 +11,7 @@
 
 * Falta de suporte JPA (Anotações);
 * Não faz relacionamentos, o desenvolvedor tem que relacionar as tabelas de forma manual;
+* Para realizar o stress de carga, foi necessário usar concatMap ao invés do flatMap, não sendo possível paralelizar a persistência. Estoura o limite da fila;
 * Até aonde pesquisei, o campo id deve ser autoincrement para funcionar com o R2DBC, passando um id diferente de nulo é assumido que é um update e não um insert;
 
 
@@ -41,3 +42,11 @@ Tem um footprint de memória menor.
 É um paradigma de programação diferente, a curva de aprendizado é maior.
 Para uso com banco de dados relacionais, não existe ainda um driver reativo maduro
 
+## Como rodar
+
+```
+./make
+./run
+```
+
+Usar http://localhost:8080/swagger-ui.html
