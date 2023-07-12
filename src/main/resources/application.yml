@@ -2,4 +2,4 @@ spring:
   r2dbc:
     url: r2dbc:postgresql://${DB_HOST:db}/${DB_NAME:books}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:Ora1626X}
+    password: ${DB_PASSWORD:root}

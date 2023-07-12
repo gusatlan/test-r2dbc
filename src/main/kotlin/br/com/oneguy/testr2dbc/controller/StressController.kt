@@ -13,7 +13,7 @@ class StressController(
 ) {
 
     @GetMapping("/stress/{quantity}")
-    @ResponseStatus(HttpStatus.ACCEPTED)
+    @ResponseStatus(HttpStatus.OK)
     fun stress(
         @PathVariable("quantity", required = true) quantity: Long
     ) = service.stress(quantity)

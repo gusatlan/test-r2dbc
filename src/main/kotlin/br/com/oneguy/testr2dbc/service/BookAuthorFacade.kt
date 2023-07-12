@@ -6,10 +6,13 @@ import br.com.oneguy.testr2dbc.model.dto.BookDTO
 import br.com.oneguy.testr2dbc.model.persist.Author
 import br.com.oneguy.testr2dbc.model.persist.Book
 import br.com.oneguy.testr2dbc.model.persist.BookAuthor
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toFlux
+import java.util.*
 
 @Service
 class BookAuthorFacade(
@@ -17,6 +20,10 @@ class BookAuthorFacade(
     private val bookService: BookService,
     private val bookAuthorService: BookAuthorService
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+    }
 
     private fun findBook(bookId: Long? = null, title: String? = null, authorName: String? = null): Flux<Book> {
         val items = if (bookId != null) {
@@ -123,7 +130,44 @@ class BookAuthorFacade(
     }
 
     @Transactional
-    fun stress(quantity: Long=1000L) {
+    fun stress(quantity: Long = 1000L): Mono<Void> {
+        return Flux.fromIterable(generateBook().take(quantity.toInt()).asIterable())
+            .flatMap(this::save)
+            .zipWith(generateAuthor().take(quantity.toInt()).asIterable().toFlux().flatMap(this::save))
+            .map { tuple ->
+                BookAuthor(
+                    bookId = tuple.t1.id!!,
+                    authorId = tuple.t2.id!!
+                )
+            }
+            .flatMap(bookAuthorService::save)
+            .doOnNext {
+                logger.info("BookAuthor: $it saved")
+            }
+            .then()
+    }
 
+    private fun generateBook() = sequence {
+        while (true) {
+            val item = Book(
+                id = null,
+                title = "Book ${UUID.randomUUID()}"
+            ).transform()
+
+            logger.info("generateBook: $item")
+            yield(item)
+        }
+    }
+
+    private fun generateAuthor() = sequence {
+        while (true) {
+            val item = Author(
+                id = null,
+                name = "Author ${UUID.randomUUID()}"
+            ).transform()
+
+            logger.info("generateAuthor: $item")
+            yield(item)
+        }
     }
 }
